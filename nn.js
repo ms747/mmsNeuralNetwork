@@ -38,55 +38,44 @@ class NeuralNetwork {
         outputs.add(this.bias_o);
         outputs.map(sigmoid);
 
-        
         let targets = Matrix.fromArray(target_array);
 
-       
         let output_errors = Matrix.subtract(targets, outputs)
 
         let gradients = Matrix.map(outputs, desigmoid);
         gradients.multiply(output_errors);
         gradients.multiply(this.learningRate);
 
-       
         let hidden_T = Matrix.transpose(hidden);
-        let wt_ho_deltas = Matrix.multiply(gradients,hidden_T);
+        let wt_ho_deltas = Matrix.multiply(gradients, hidden_T);
 
-        
         this.wt_ho.add(wt_ho_deltas);
         this.bias_o.add(gradients);
 
-       
         let who_t = Matrix.transpose(this.wt_ho);
-        let hidden_errors = Matrix.multiply(who_t,output_errors);  
+        let hidden_errors = Matrix.multiply(who_t, output_errors);
 
-      
-        let hidden_gradient = Matrix.map(hidden,desigmoid);
+        let hidden_gradient = Matrix.map(hidden, desigmoid);
         hidden_gradient.multiply(hidden_errors);
         hidden_gradient.multiply(this.learningRate);
 
-     
         let input_T = Matrix.transpose(inputs);
-        let wt_ih_deltas = Matrix.multiply(hidden_gradient,input_T);
+        let wt_ih_deltas = Matrix.multiply(hidden_gradient, input_T);
 
-    
         this.wt_ih.add(wt_ih_deltas);
         this.bias_h.add(hidden_gradient);
     }
 
     predict(input_array) {
-
- 
         let inputs = Matrix.fromArray(input_array);
         let hidden = Matrix.multiply(this.wt_ih, inputs);
         hidden.add(this.bias_h);
-  
         hidden.map(sigmoid);
-    
+
         let output = Matrix.multiply(this.wt_ho, hidden);
         output.add(this.bias_o);
         output.map(sigmoid);
-   
+
         return output.toArray();
-      }
+    }
 }
