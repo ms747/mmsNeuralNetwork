@@ -1,40 +1,92 @@
 function sigmoid(x) {
-    return (1 / (1 + Math.exp(-x)));
+    return 1 / (1 + Math.exp(-x));
 }
 
-function desigmoid(y){
-    return y*(1-y);
+function desigmoid(x) {
+    return x * (1 - x);
 }
 
 class NeuralNetwork {
-    constructor(input_nodes, hidden_layer_nodes, output_nodes) {
+    constructor(input_nodes, hidden_nodes, output_nodes) {
+
         this.input_nodes = input_nodes;
-        this.hidden_layer_nodes = hidden_layer_nodes;
+        this.hidden_nodes = hidden_nodes;
         this.output_nodes = output_nodes;
-        this.weights_ih = new Matrix(this.hidden_layer_nodes, this.input_nodes).randomize();
-        this.weights_ho = new Matrix(this.output_nodes, this.hidden_layer_nodes).randomize();
-        this.bias_ih = new Matrix(this.hidden_layer_nodes, 1).randomize();
-        this.bias_ho = new Matrix(this.output_nodes, 1).randomize();
+
+        this.wt_ih = new Matrix(this.hidden_nodes, this.input_nodes);
+        this.wt_ho = new Matrix(this.output_nodes, this.hidden_nodes);
+
+        this.wt_ih.randomize();
+        this.wt_ho.randomize();
+
+        this.bias_h = new Matrix(this.hidden_nodes, 1);
+        this.bias_o = new Matrix(this.output_nodes, 1);
+
+        this.bias_h.randomize();
+        this.bias_o.randomize();
+
+        this.learningRate = 0.5;
     }
 
-    feedforward(input_data) {
-        // For hidden layer
-        let inputs = Matrix.fromArray(input_data)
-        let input_h = Matrix.multiply(this.weights_ih, inputs);
-        input_h.add(this.bias_ih);
-        let output_h = input_h.map(sigmoid);
+    train(input_array, target_array) {
+        let inputs = Matrix.fromArray(input_array);
+        let hidden = Matrix.multiply(this.wt_ih, inputs);
+        hidden.add(this.bias_h);
+        hidden.map(sigmoid);
 
-        // For Output Layer
-        let input_o = Matrix.multiply(this.weights_ho, output_h)
-        input_o.add(this.bias_ho);
-        let output_o = input_o.map(sigmoid).printMatrix()
+        let outputs = Matrix.multiply(this.wt_ho, hidden);
+        outputs.add(this.bias_o);
+        outputs.map(sigmoid);
+
+        
+        let targets = Matrix.fromArray(target_array);
+
+       
+        let output_errors = Matrix.subtract(targets, outputs)
+
+        let gradients = Matrix.map(outputs, desigmoid);
+        gradients.multiply(output_errors);
+        gradients.multiply(this.learningRate);
+
+       
+        let hidden_T = Matrix.transpose(hidden);
+        let wt_ho_deltas = Matrix.multiply(gradients,hidden_T);
+
+        
+        this.wt_ho.add(wt_ho_deltas);
+        this.bias_o.add(gradients);
+
+       
+        let who_t = Matrix.transpose(this.wt_ho);
+        let hidden_errors = Matrix.multiply(who_t,output_errors);  
+
+      
+        let hidden_gradient = Matrix.map(hidden,desigmoid);
+        hidden_gradient.multiply(hidden_errors);
+        hidden_gradient.multiply(this.learningRate);
+
+     
+        let input_T = Matrix.transpose(inputs);
+        let wt_ih_deltas = Matrix.multiply(hidden_gradient,input_T);
+
+    
+        this.wt_ih.add(wt_ih_deltas);
+        this.bias_h.add(hidden_gradient);
     }
 
-    predict(input_data) {
-        this.feedforward(input_data)
-    }
+    predict(input_array) {
 
-    train(inputs, values) {
-
-    }
+ 
+        let inputs = Matrix.fromArray(input_array);
+        let hidden = Matrix.multiply(this.wt_ih, inputs);
+        hidden.add(this.bias_h);
+  
+        hidden.map(sigmoid);
+    
+        let output = Matrix.multiply(this.wt_ho, hidden);
+        output.add(this.bias_o);
+        output.map(sigmoid);
+   
+        return output.toArray();
+      }
 }
